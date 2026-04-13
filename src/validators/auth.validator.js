@@ -62,7 +62,20 @@ function validateLoginBody(body) {
     return { valid: true, data: { email, password } };
 }
 
+/**
+ * Validates authenticated request context for delete account.
+ * @returns {{ valid: true, data: object } | { valid: false, status: number, code: string, message: string }}
+ */
+function validateDeleteAccountContext(req) {
+    const userId = req?.user?.id;
+    if (typeof userId !== 'string' || userId.trim() === '') {
+        return invalid(401, 'UNAUTHORIZED', 'User authentication is required');
+    }
+    return { valid: true, data: { userId } };
+}
+
 module.exports = {
     validateSignupBody,
     validateLoginBody,
+    validateDeleteAccountContext,
 };

@@ -83,6 +83,75 @@ Same `data` shape as signup.
 
 ---
 
+## POST `/api/v1/auth/logout`
+
+Logs out the currently authenticated user. This API is stateless: server does not store tokens, so client should remove the token after this call.
+
+### Headers
+
+| Header | Required | Value |
+|--------|----------|-------|
+| `Authorization` | yes | `Bearer <accessToken>` |
+
+### Flow
+
+1. **Route** — `POST /logout` with `requireAuth` middleware.
+2. **Middleware** (`src/middlewares/auth.middleware.js`) — Validates bearer token and sets `req.user`.
+3. **Controller** (`logout` in `src/controllers/auth.controller.js`) — Calls `logoutUser` service.
+4. **Service** (`logoutUser` in `src/services/auth.service.js`) — Returns success message.
+
+### Success response (`200`)
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "User logged out successfully"
+  }
+}
+```
+
+### Error cases
+
+- **401** — Missing/invalid token (`UNAUTHORIZED`).
+
+---
+
+## DELETE `/api/v1/auth/account`
+
+Deletes the currently authenticated user's account.
+
+### Headers
+
+| Header | Required | Value |
+|--------|----------|-------|
+| `Authorization` | yes | `Bearer <accessToken>` |
+
+### Flow
+
+1. **Route** — `DELETE /account` with `requireAuth`.
+2. **Middleware** — Resolves token and attaches `req.user.id`.
+3. **Controller** (`deleteAccount`) — Validates auth context and calls service.
+4. **Service** (`deleteUserAccount`) — Deletes user by authenticated id.
+
+### Success response (`200`)
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Account deleted successfully"
+  }
+}
+```
+
+### Error cases
+
+- **401** — Missing/invalid token (`UNAUTHORIZED`).
+- **404** — User not found (`USER_NOT_FOUND`).
+
+---
+
 ## GET `/api/v1/health`
 
 Simple liveness check: `{ "success": true, "data": { "status": "ok" } }`.
