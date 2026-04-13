@@ -4,10 +4,6 @@ function invalid(status, code, message) {
     return { valid: false, status, code, message };
 }
 
-/**
- * Validates signup payload.
- * @returns {{ valid: true, data: object } | { valid: false, status: number, code: string, message: string }}
- */
 function validateSignupBody(body) {
     if (typeof body.username !== 'string' || body.username.trim() === '') {
         return invalid(400, 'VALIDATION_ERROR', 'username is required');
@@ -43,10 +39,6 @@ function validateSignupBody(body) {
     return { valid: true, data: { username, email, password, role } };
 }
 
-/**
- * Validates login payload.
- * @returns {{ valid: true, data: object } | { valid: false, status: number, code: string, message: string }}
- */
 function validateLoginBody(body) {
     if (typeof body.email !== 'string' || body.email.trim() === '') {
         return invalid(400, 'VALIDATION_ERROR', 'email is required');
@@ -62,10 +54,6 @@ function validateLoginBody(body) {
     return { valid: true, data: { email, password } };
 }
 
-/**
- * Validates authenticated request context for delete account.
- * @returns {{ valid: true, data: object } | { valid: false, status: number, code: string, message: string }}
- */
 function validateDeleteAccountContext(req) {
     const userId = req?.user?.id;
     if (typeof userId !== 'string' || userId.trim() === '') {

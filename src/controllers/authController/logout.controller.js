@@ -7,9 +7,6 @@ function sendError(res, status, code, message) {
     });
 }
 
-/**
- * logout — stateless endpoint to let clients clear auth state.
- */
 async function logout(req, res) {
     try {
         const result = authService.logoutUser();

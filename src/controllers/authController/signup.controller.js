@@ -7,10 +7,6 @@ function sendError(res, status, code, message) {
         error: { code, message },
     });
 }
-
-/**
- * signup — validate input, call service, send JSON.
- */
 async function signup(req, res) {
     try {
         const v = validateSignupBody(req.body);

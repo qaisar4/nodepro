@@ -7,10 +7,6 @@ function sendError(res, status, code, message) {
         error: { code, message },
     });
 }
-
-/**
- * login — validate credentials payload, call service, send JSON.
- */
 async function login(req, res) {
     try {
         const v = validateLoginBody(req.body);

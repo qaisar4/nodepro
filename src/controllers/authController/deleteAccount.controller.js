@@ -7,10 +7,6 @@ function sendError(res, status, code, message) {
         error: { code, message },
     });
 }
-
-/**
- * deleteAccount — removes currently authenticated user.
- */
 async function deleteAccount(req, res) {
     try {
         const v = validateDeleteAccountContext(req);
