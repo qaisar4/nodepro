@@ -1,6 +1,7 @@
 const { Router } = require('express');
 const multer = require('multer');
-const mediaController = require('../controllers/media.controller');
+const { upload: uploadHandler } = require('../controllers/mediaController/upload.controller');
+const { list } = require('../controllers/mediaController/list.controller');
 const { requireAuth } = require('../middlewares/auth.middleware');
 
 const router = Router();
@@ -12,7 +13,7 @@ const upload = multer({
     },
 });
 
-router.post('/upload', requireAuth, upload.single('file'), mediaController.upload);
-router.get('/', requireAuth, mediaController.list);
+router.post('/upload', requireAuth, upload.single('file'), uploadHandler);
+router.get('/', requireAuth, list);
 
 module.exports = router;
