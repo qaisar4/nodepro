@@ -152,6 +152,82 @@ Deletes the currently authenticated user's account.
 
 ---
 
+## POST `/api/v1/media/upload`
+
+Uploads an image to ImageKit, saves metadata in MongoDB, and returns the stored record.
+
+### Content type
+
+Use `multipart/form-data`.
+
+### Form fields
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `file` | image file | yes | Max 10 MB |
+| `title` | string | yes | Media title |
+| `description` | string | yes | Media description |
+
+### Success response (`201`)
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "File uploaded successfully",
+    "media": {
+      "id": "...",
+      "title": "Profile banner",
+      "description": "Homepage hero asset",
+      "name": "banner.png",
+      "url": "https://ik.imagekit.io/...",
+      "thumbnail": "https://ik.imagekit.io/.../tr:w-300,h-300/...",
+      "createdAt": "..."
+    }
+  }
+}
+```
+
+### Error cases
+
+- **400** — Missing or invalid `title`, `description`, or `file` (`VALIDATION_ERROR`).
+- **409** — Duplicate media record in DB (`DUPLICATE_MEDIA`).
+- **500** — Upload or server error (`INTERNAL_ERROR`).
+
+---
+
+## GET `/api/v1/media`
+
+Returns all uploaded media records from MongoDB (latest first).
+
+### Success response (`200`)
+
+```json
+{
+  "success": true,
+  "data": {
+    "media": [
+      {
+        "id": "...",
+        "title": "Profile banner",
+        "description": "Homepage hero asset",
+        "name": "banner.png",
+        "url": "https://ik.imagekit.io/...",
+        "thumbnail": "https://ik.imagekit.io/.../tr:w-300,h-300/...",
+        "createdAt": "...",
+        "updatedAt": "..."
+      }
+    ]
+  }
+}
+```
+
+### Error cases
+
+- **500** — Server error (`INTERNAL_ERROR`).
+
+---
+
 ## GET `/api/v1/health`
 
 Simple liveness check: `{ "success": true, "data": { "status": "ok" } }`.
@@ -176,6 +252,6 @@ Simple liveness check: `{ "success": true, "data": { "status": "ok" } }`.
 
 ## Environment variables
 
-See `.env.example`: `MONGODB_URI`, `JWT_SECRET`, `PORT`. Access tokens expire after **7 days** (set in `src/utils/token.util.js`, not env).
+See `.env.example`: `MONGODB_URI`, `JWT_SECRET`, `PORT`, `IMAGEKIT_PUBLIC_KEY`, `IMAGEKIT_PRIVATE_KEY`, `IMAGEKIT_URL_ENDPOINT`. Access tokens expire after **7 days** (set in `src/utils/token.util.js`, not env).
 
 If `JWT_SECRET` is unset and `NODE_ENV` is not `production`, the server starts with a **development-only** default and logs a warning. Production **must** set `JWT_SECRET`.
