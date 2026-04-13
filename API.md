@@ -1,0 +1,112 @@
+# Authentication API
+
+Base path: `/api/v1`
+
+All JSON bodies use `Content-Type: application/json`.
+
+---
+
+## POST `/api/v1/auth/signup`
+
+Creates a user account and returns a JWT you can send on later requests (header: `Authorization: Bearer <token>`).
+
+### Request body
+
+| Field      | Type   | Required | Rules |
+|-----------|--------|----------|--------|
+| `username`| string | yes      | 2–50 characters, unique |
+| `email`   | string | yes      | Valid email format, unique |
+| `password`| string | yes      | Minimum 8 characters |
+| `role`    | string | no       | `"user"` or `"artist"` (default: `user`) |
+
+### Flow (what happens in code)
+
+1. **Route** (`src/routes/auth.routes.js`) — `POST /signup` → signup controller.
+2. **Controller** (`signup` in `src/controllers/auth.controller.js`) — Thin HTTP layer: no business rules beyond calling validation + service.
+3. **Validator** (`validateSignupBody` in `src/validators/auth.validator.js`) — Checks types, lengths, email shape, optional `role`. Throws `AppError` with code `VALIDATION_ERROR` if invalid.
+4. **Service** (`registerUser` in `src/services/auth.service.js`) — Checks duplicate email/username, hashes password via `hashPassword` (`src/utils/password.util.js`), creates the document with Mongoose (`src/models/user.model.js`), builds JWT via `signAccessToken` (`src/utils/token.util.js`).
+5. **Response** — `201` with `{ success: true, data: { user, accessToken } }`.
+
+### Success response (`201`)
+
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": "...",
+      "username": "jane",
+      "email": "jane@example.com",
+      "role": "user",
+      "createdAt": "..."
+    },
+    "accessToken": "<jwt>"
+  }
+}
+```
+
+### Error cases
+
+- **400** — Validation failed (`VALIDATION_ERROR`).
+- **409** — Email or username already used (`EMAIL_TAKEN`, `USERNAME_TAKEN`, or Mongo duplicate key).
+- **500** — Unexpected server error (`INTERNAL_ERROR`).
+
+---
+
+## POST `/api/v1/auth/login`
+
+Authenticates with email + password and returns the same token payload shape as signup.
+
+### Request body
+
+| Field      | Type   | Required |
+|-----------|--------|----------|
+| `email`   | string | yes      |
+| `password`| string | yes      |
+
+### Flow
+
+1. **Route** — `POST /login` → `login` on the auth controller.
+2. **Controller** (`login` in `src/controllers/auth.controller.js`) — Calls `validateLoginBody` then `loginUser`.
+3. **Validator** (`validateLoginBody`) — Ensures non-empty email/password and basic email format.
+4. **Service** (`loginUser` in `src/services/auth.service.js`) — Loads user with `.select('+password')` (password is hidden by default on the schema), compares with `comparePassword`, issues JWT. Does not reveal whether email or password was wrong (same error message).
+5. **Response** — `200` with `{ success: true, data: { user, accessToken } }`.
+
+### Success response (`200`)
+
+Same `data` shape as signup.
+
+### Error cases
+
+- **400** — Validation (`VALIDATION_ERROR`).
+- **401** — Wrong email or password (`INVALID_CREDENTIALS`).
+
+---
+
+## GET `/api/v1/health`
+
+Simple liveness check: `{ "success": true, "data": { "status": "ok" } }`.
+
+---
+
+## Project layout (auth-related)
+
+| Path | Role |
+|------|------|
+| `src/routes/auth.routes.js` | Maps URLs to controller methods |
+| `src/controllers/auth.controller.js` | Parses request, calls service, sets status + JSON |
+| `src/services/auth.service.js` | Signup/login rules, DB + tokens |
+| `src/validators/auth.validator.js` | Input rules for auth bodies |
+| `src/models/user.model.js` | User schema |
+| `src/utils/password.util.js` | Bcrypt hash/compare |
+| `src/utils/token.util.js` | JWT signing |
+| `src/middlewares/errorHandler.js` | Consistent JSON errors |
+| `src/errors/AppError.js` | Typed operational errors |
+
+---
+
+## Environment variables
+
+See `.env.example`: `MONGODB_URI`, `JWT_SECRET`, `PORT`. Access tokens expire after **7 days** (set in `src/utils/token.util.js`, not env).
+
+If `JWT_SECRET` is unset and `NODE_ENV` is not `production`, the server starts with a **development-only** default and logs a warning. Production **must** set `JWT_SECRET`.
