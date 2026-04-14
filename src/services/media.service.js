@@ -118,6 +118,76 @@ async function uploadMedia({ title, description, imageFile, audioFile }) {
     };
 }
 
+async function updateMedia({ id, title, description, imageFile, audioFile }) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return fail(400, 'VALIDATION_ERROR', 'Invalid media id');
+    }
+
+    const mediaDoc = await Media.findById(id);
+    if (!mediaDoc) {
+        return fail(404, 'NOT_FOUND', 'Media not found');
+    }
+
+    let imageUpload = null;
+    if (imageFile) {
+        imageUpload = await uploadSingleFile(imageFile);
+        if (!imageUpload.ok) {
+            return imageUpload;
+        }
+    }
+
+    let audioUpload = null;
+    if (audioFile) {
+        audioUpload = await uploadSingleFile(audioFile);
+        if (!audioUpload.ok) {
+            return audioUpload;
+        }
+    }
+
+    if (typeof title === 'string') {
+        mediaDoc.title = title;
+    }
+    if (typeof description === 'string') {
+        mediaDoc.description = description;
+    }
+    if (imageUpload) {
+        mediaDoc.thumbnail = imageUpload.uploadResult.url;
+        mediaDoc.imageKitThumbnailFileId = imageUpload.uploadResult.fileId;
+    }
+    if (audioUpload) {
+        mediaDoc.name = audioUpload.uploadResult.name || audioUpload.fileName;
+        mediaDoc.url = audioUpload.uploadResult.url;
+        mediaDoc.imageKitFileId = audioUpload.uploadResult.fileId;
+    }
+
+    try {
+        await mediaDoc.save();
+    } catch (err) {
+        if (err instanceof mongoose.Error.ValidationError) {
+            const first = Object.values(err.errors)[0];
+            return fail(400, 'VALIDATION_ERROR', first?.message || 'Validation failed');
+        }
+        if (err instanceof mongoose.Error.MongoServerError && err.code === 11000) {
+            return fail(409, 'DUPLICATE_MEDIA', 'Media already exists');
+        }
+        throw err;
+    }
+
+    return {
+        ok: true,
+        media: {
+            id: mediaDoc._id.toString(),
+            title: mediaDoc.title,
+            description: mediaDoc.description,
+            name: mediaDoc.name,
+            url: mediaDoc.url,
+            thumbnail: mediaDoc.thumbnail,
+            createdAt: mediaDoc.createdAt,
+            updatedAt: mediaDoc.updatedAt,
+        },
+    };
+}
+
 async function listMedia() {
     const mediaDocs = await Media.find().sort({ createdAt: -1 });
     return {
@@ -137,5 +207,6 @@ async function listMedia() {
 
 module.exports = {
     uploadMedia,
+    updateMedia,
     listMedia,
 };
