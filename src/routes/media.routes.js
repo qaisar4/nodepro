@@ -3,7 +3,7 @@ const multer = require('multer');
 const { upload: uploadHandler } = require('../controllers/mediaController/upload.controller');
 const { update: updateHandler } = require('../controllers/mediaController/update.controller');
 const { list } = require('../controllers/mediaController/list.controller');
-const { requireAuth } = require('../middlewares/auth.middleware');
+const { requireAuth, requireArtist } = require('../middlewares/auth.middleware');
 
 const router = Router();
 
@@ -49,8 +49,8 @@ function handleMediaUpload(req, res, next) {
     });
 }
 
-router.post('/upload', requireAuth, handleMediaUpload, uploadHandler);
-router.put('/:id', requireAuth, handleMediaUpload, updateHandler);
+router.post('/upload', requireAuth, requireArtist, handleMediaUpload, uploadHandler);
+router.put('/:id', requireAuth, requireArtist, handleMediaUpload, updateHandler);
 router.get('/', requireAuth, list);
 
 module.exports = router;

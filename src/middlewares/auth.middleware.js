@@ -31,6 +31,18 @@ function requireAuth(req, res, next) {
     }
 }
 
+function requireArtist(req, res, next) {
+    const role = req?.user?.role;
+    if (role !== 'artist') {
+        return res.status(403).json({
+            success: false,
+            error: { code: 'FORBIDDEN', message: 'Only artist can perform this action' },
+        });
+    }
+    return next();
+}
+
 module.exports = {
     requireAuth,
+    requireArtist,
 };
