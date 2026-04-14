@@ -16,8 +16,8 @@ const upload = multer({
 
 function handleMediaUpload(req, res, next) {
     upload.fields([
-        { name: 'image', maxCount: 1 },
-        { name: 'audio', maxCount: 1 },
+        { name: 'coverImage', maxCount: 1 },
+        { name: 'audioFile', maxCount: 1 },
     ])(req, res, (err) => {
         if (!err) {
             return next();
@@ -39,7 +39,7 @@ function handleMediaUpload(req, res, next) {
                     success: false,
                     error: {
                         code: 'VALIDATION_ERROR',
-                        message: 'Unexpected file field. Use "image" and "audio" keys only',
+                        message: 'Unexpected file field. Use "coverImage" and "audioFile" keys only',
                     },
                 });
             }
@@ -49,8 +49,8 @@ function handleMediaUpload(req, res, next) {
     });
 }
 
-router.post('/upload', requireAuth, requireArtist, handleMediaUpload, uploadHandler);
-router.put('/:id', requireAuth, requireArtist, handleMediaUpload, updateHandler);
+router.post('/', requireAuth, requireArtist, handleMediaUpload, uploadHandler);
+router.put('/:mediaId', requireAuth, requireArtist, handleMediaUpload, updateHandler);
 router.get('/', requireAuth, list);
 
 module.exports = router;

@@ -14,7 +14,7 @@ function sendError(res, status, code, message) {
 
 async function update(req, res) {
     try {
-        const idValidation = validateMediaId(req.params.id);
+        const idValidation = validateMediaId(req.params.mediaId);
         if (!idValidation.valid) {
             return sendError(res, idValidation.status, idValidation.code, idValidation.message);
         }

@@ -36,7 +36,7 @@ function requireArtist(req, res, next) {
     if (role !== 'artist') {
         return res.status(403).json({
             success: false,
-            error: { code: 'FORBIDDEN', message: 'Only artist can perform this action' },
+            error: { code: 'FORBIDDEN', message: 'Only artists can perform this action' },
         });
     }
     return next();

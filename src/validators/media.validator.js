@@ -25,8 +25,8 @@ function validateUploadMediaBody(body) {
 }
 
 function validateUploadedFiles(files) {
-    const imageFile = files?.image?.[0];
-    const audioFile = files?.audio?.[0];
+    const imageFile = files?.coverImage?.[0];
+    const audioFile = files?.audioFile?.[0];
 
     if (!imageFile) {
         return invalid(400, 'VALIDATION_ERROR', 'image file is required');
@@ -38,12 +38,12 @@ function validateUploadedFiles(files) {
 
     const imageMimeType = String(imageFile.mimetype || '').toLowerCase();
     if (!imageMimeType.startsWith('image/')) {
-        return invalid(400, 'VALIDATION_ERROR', 'Only image files are allowed for key "image"');
+        return invalid(400, 'VALIDATION_ERROR', 'Only image files are allowed for key "coverImage"');
     }
 
     const audioMimeType = String(audioFile.mimetype || '').toLowerCase();
     if (!audioMimeType.startsWith('audio/')) {
-        return invalid(400, 'VALIDATION_ERROR', 'Only audio files are allowed for key "audio"');
+        return invalid(400, 'VALIDATION_ERROR', 'Only audio files are allowed for key "audioFile"');
     }
 
     return {
@@ -76,20 +76,20 @@ function validateUpdateMediaBody(body) {
 }
 
 function validateOptionalUpdateFiles(files) {
-    const imageFile = files?.image?.[0];
-    const audioFile = files?.audio?.[0];
+    const imageFile = files?.coverImage?.[0];
+    const audioFile = files?.audioFile?.[0];
 
     if (imageFile) {
         const imageMimeType = String(imageFile.mimetype || '').toLowerCase();
         if (!imageMimeType.startsWith('image/')) {
-            return invalid(400, 'VALIDATION_ERROR', 'Only image files are allowed for key "image"');
+            return invalid(400, 'VALIDATION_ERROR', 'Only image files are allowed for key "coverImage"');
         }
     }
 
     if (audioFile) {
         const audioMimeType = String(audioFile.mimetype || '').toLowerCase();
         if (!audioMimeType.startsWith('audio/')) {
-            return invalid(400, 'VALIDATION_ERROR', 'Only audio files are allowed for key "audio"');
+            return invalid(400, 'VALIDATION_ERROR', 'Only audio files are allowed for key "audioFile"');
         }
     }
 
