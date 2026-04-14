@@ -1,5 +1,5 @@
 const mediaService = require('../../services/media.service');
-const { validateUploadMediaBody, validateUploadedFile } = require('../../validators/media.validator');
+const { validateUploadMediaBody, validateUploadedFiles } = require('../../validators/media.validator');
 
 function sendError(res, status, code, message) {
     return res.status(status).json({
@@ -15,14 +15,15 @@ async function upload(req, res) {
             return sendError(res, bodyValidation.status, bodyValidation.code, bodyValidation.message);
         }
 
-        const fileValidation = validateUploadedFile(req.file);
-        if (!fileValidation.valid) {
-            return sendError(res, fileValidation.status, fileValidation.code, fileValidation.message);
+        const filesValidation = validateUploadedFiles(req.files);
+        if (!filesValidation.valid) {
+            return sendError(res, filesValidation.status, filesValidation.code, filesValidation.message);
         }
 
         const result = await mediaService.uploadMedia({
             ...bodyValidation.data,
-            file: req.file,
+            imageFile: filesValidation.data.imageFile,
+            audioFile: filesValidation.data.audioFile,
         });
 
         if (!result.ok) {
@@ -32,7 +33,7 @@ async function upload(req, res) {
         return res.status(201).json({
             success: true,
             data: {
-                message: 'File uploaded successfully',
+                message: 'Media uploaded successfully',
                 media: result.media,
             },
         });

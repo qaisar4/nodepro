@@ -36,6 +36,10 @@ const mediaSchema = new mongoose.Schema(
             trim: true,
             unique: true,
         },
+        imageKitThumbnailFileId: {
+            type: String,
+            trim: true,
+        },
     },
     { timestamps: true }
 );

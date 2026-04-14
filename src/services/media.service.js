@@ -44,31 +44,42 @@ function mapImageKitUploadError(err) {
 }
 
 function buildSafeFileName(originalName) {
-    const fallback = `image-${Date.now()}.jpg`;
+    const fallback = `media-${Date.now()}.bin`;
     if (typeof originalName !== 'string' || originalName.trim() === '') {
         return fallback;
     }
     return originalName.trim().replace(/\s+/g, '-');
 }
 
-async function uploadMedia({ title, description, file }) {
+async function uploadSingleFile(file) {
     const fileName = buildSafeFileName(file.originalname);
-
-    let uploadResult;
     try {
         const fileForUpload = await toFile(
             file.buffer,
             fileName,
             file.mimetype ? { type: file.mimetype } : undefined,
         );
-        uploadResult = await imagekit.files.upload({
+        const uploadResult = await imagekit.files.upload({
             file: fileForUpload,
             fileName,
             folder: '/nodepro',
             useUniqueFileName: true,
         });
+        return { ok: true, fileName, uploadResult };
     } catch (err) {
         return mapImageKitUploadError(err);
+    }
+}
+
+async function uploadMedia({ title, description, imageFile, audioFile }) {
+    const imageUpload = await uploadSingleFile(imageFile);
+    if (!imageUpload.ok) {
+        return imageUpload;
+    }
+
+    const audioUpload = await uploadSingleFile(audioFile);
+    if (!audioUpload.ok) {
+        return audioUpload;
     }
 
     let mediaDoc;
@@ -76,10 +87,11 @@ async function uploadMedia({ title, description, file }) {
         mediaDoc = await Media.create({
             title,
             description,
-            name: uploadResult.name || fileName,
-            url: uploadResult.url,
-            thumbnail: uploadResult.thumbnailUrl || uploadResult.url,
-            imageKitFileId: uploadResult.fileId,
+            name: audioUpload.uploadResult.name || audioUpload.fileName,
+            url: audioUpload.uploadResult.url,
+            thumbnail: imageUpload.uploadResult.url,
+            imageKitFileId: audioUpload.uploadResult.fileId,
+            imageKitThumbnailFileId: imageUpload.uploadResult.fileId,
         });
     } catch (err) {
         if (err instanceof mongoose.Error.ValidationError) {
