@@ -22,6 +22,7 @@ function fail(status, code, message) {
  * @returns {Promise<{ ok: true, user: object, accessToken: string } | { ok: false, status: number, code: string, message: string }>}
  */
 async function registerUser({ username, email, password, role }) {
+    console.log("registerUser", username, email, password, role);
     const existing = await User.findOne({ $or: [{ email }, { username }] });
     if (existing) {
         if (existing.email === email) {
@@ -103,9 +104,23 @@ async function deleteUserAccount({ userId }) {
     return { ok: true, message: 'Account deleted successfully' };
 }
 
+/**
+ * getUserProfile — returns authenticated user's public profile data.
+ * @returns {Promise<{ ok: true, user: object } | { ok: false, status: number, code: string, message: string }>}
+ */
+async function getUserProfile({ userId }) {
+    const user = await User.findById(userId);
+    if (!user) {
+        return fail(404, 'USER_NOT_FOUND', 'User profile not found');
+    }
+
+    return { ok: true, user: publicUserFields(user) };
+}
+
 module.exports = {
     registerUser,
     loginUser,
     logoutUser,
     deleteUserAccount,
+    getUserProfile,
 };

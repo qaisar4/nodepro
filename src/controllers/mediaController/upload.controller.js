@@ -22,6 +22,7 @@ async function upload(req, res) {
 
         const result = await mediaService.uploadMedia({
             ...bodyValidation.data,
+            artistId: req.user.id,
             imageFile: filesValidation.data.imageFile,
             audioFile: filesValidation.data.audioFile,
         });

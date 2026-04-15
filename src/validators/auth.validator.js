@@ -62,8 +62,17 @@ function validateDeleteAccountContext(req) {
     return { valid: true, data: { userId } };
 }
 
+function validateProfileContext(req) {
+    const userId = req?.user?.id;
+    if (typeof userId !== 'string' || userId.trim() === '') {
+        return invalid(401, 'UNAUTHORIZED', 'User authentication is required');
+    }
+    return { valid: true, data: { userId } };
+}
+
 module.exports = {
     validateSignupBody,
     validateLoginBody,
     validateDeleteAccountContext,
+    validateProfileContext,
 };

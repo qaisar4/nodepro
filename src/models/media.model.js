@@ -40,6 +40,16 @@ const mediaSchema = new mongoose.Schema(
             type: String,
             trim: true,
         },
+        artistId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            index: true,
+        },
+        isInAlbum: {
+            type: Boolean,
+            default: false,
+            index: true,
+        },
     },
     { timestamps: true }
 );

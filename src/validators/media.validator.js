@@ -20,8 +20,27 @@ function validateUploadMediaBody(body) {
 
     const title = body.title.trim();
     const description = body.description.trim();
+    let isInAlbum = false;
 
-    return { valid: true, data: { title, description } };
+    if (Object.prototype.hasOwnProperty.call(body, 'addInAlbum')) {
+        const rawAddInAlbum = body.addInAlbum;
+        if (typeof rawAddInAlbum === 'boolean') {
+            isInAlbum = rawAddInAlbum;
+        } else if (typeof rawAddInAlbum === 'string') {
+            const normalized = rawAddInAlbum.trim().toLowerCase();
+            if (normalized === 'true') {
+                isInAlbum = true;
+            } else if (normalized === 'false') {
+                isInAlbum = false;
+            } else {
+                return invalid(400, 'VALIDATION_ERROR', 'addInAlbum must be true or false');
+            }
+        } else {
+            return invalid(400, 'VALIDATION_ERROR', 'addInAlbum must be a boolean');
+        }
+    }
+
+    return { valid: true, data: { title, description, isInAlbum } };
 }
 
 function validateUploadedFiles(files) {

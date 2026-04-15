@@ -1,5 +1,5 @@
 const authService = require('../../services/auth.service');
-const { validateSignupBody } = require('../../validators/auth.validator');
+const { validateProfileContext } = require('../../validators/auth.validator');
 
 function sendError(res, status, code, message) {
     return res.status(status).json({
@@ -7,29 +7,22 @@ function sendError(res, status, code, message) {
         error: { code, message },
     });
 }
-async function signup(req, res) {
 
-    console.log(req.body);
+async function profile(req, res) {
     try {
-        const v = validateSignupBody(req.body);
+        const v = validateProfileContext(req);
         if (!v.valid) {
-            console.log("in invalid",v);
             return sendError(res, v.status, v.code, v.message);
         }
 
-        const result = await authService.registerUser(v.data);
+        const result = await authService.getUserProfile(v.data);
         if (!result.ok) {
-
-            console.log("in error",result);
             return sendError(res, result.status, result.code, result.message);
         }
 
-
-        console.log(result);
-
-        return res.status(201).json({
+        return res.status(200).json({
             success: true,
-            data: { user: result.user, accessToken: result.accessToken, message: "User registered successfully"},
+            data: { user: result.user },
         });
     } catch (err) {
         console.error(err);
@@ -37,4 +30,4 @@ async function signup(req, res) {
     }
 }
 
-module.exports = { signup };
+module.exports = { profile };

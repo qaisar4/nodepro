@@ -71,7 +71,26 @@ async function uploadSingleFile(file) {
     }
 }
 
-async function uploadMedia({ title, description, imageFile, audioFile }) {
+function mapMedia(doc) {
+    return {
+        id: doc._id.toString(),
+        title: doc.title,
+        description: doc.description,
+        name: doc.name,
+        audioFileName: doc.name,
+        url: doc.url,
+        audioUrl: doc.url,
+        thumbnail: doc.thumbnail,
+        coverImageUrl: doc.thumbnail,
+        artistId: doc.artistId?._id ? doc.artistId._id.toString() : doc.artistId?.toString?.() || null,
+        artistUsername: doc.artistId?.username || null,
+        isInAlbum: Boolean(doc.isInAlbum),
+        createdAt: doc.createdAt,
+        updatedAt: doc.updatedAt,
+    };
+}
+
+async function uploadMedia({ title, description, artistId, isInAlbum, imageFile, audioFile }) {
     const imageUpload = await uploadSingleFile(imageFile);
     if (!imageUpload.ok) {
         return imageUpload;
@@ -90,6 +109,8 @@ async function uploadMedia({ title, description, imageFile, audioFile }) {
             name: audioUpload.uploadResult.name || audioUpload.fileName,
             url: audioUpload.uploadResult.url,
             thumbnail: imageUpload.uploadResult.url,
+            artistId,
+            isInAlbum: Boolean(isInAlbum),
             imageKitFileId: audioUpload.uploadResult.fileId,
             imageKitThumbnailFileId: imageUpload.uploadResult.fileId,
         });
@@ -106,18 +127,7 @@ async function uploadMedia({ title, description, imageFile, audioFile }) {
 
     return {
         ok: true,
-        media: {
-            id: mediaDoc._id.toString(),
-            title: mediaDoc.title,
-            description: mediaDoc.description,
-            name: mediaDoc.name,
-            audioFileName: mediaDoc.name,
-            url: mediaDoc.url,
-            audioUrl: mediaDoc.url,
-            thumbnail: mediaDoc.thumbnail,
-            coverImageUrl: mediaDoc.thumbnail,
-            createdAt: mediaDoc.createdAt,
-        },
+        media: mapMedia(mediaDoc),
     };
 }
 
@@ -178,39 +188,71 @@ async function updateMedia({ id, title, description, imageFile, audioFile }) {
 
     return {
         ok: true,
-        media: {
-            id: mediaDoc._id.toString(),
-            title: mediaDoc.title,
-            description: mediaDoc.description,
-            name: mediaDoc.name,
-            audioFileName: mediaDoc.name,
-            url: mediaDoc.url,
-            audioUrl: mediaDoc.url,
-            thumbnail: mediaDoc.thumbnail,
-            coverImageUrl: mediaDoc.thumbnail,
-            createdAt: mediaDoc.createdAt,
-            updatedAt: mediaDoc.updatedAt,
-        },
+        media: mapMedia(mediaDoc),
     };
 }
 
 async function listMedia() {
-    const mediaDocs = await Media.find().sort({ createdAt: -1 });
+    const mediaDocs = await Media.find().populate('artistId', 'username').sort({ createdAt: -1 });
+    const songs = [];
+    const albumsByArtist = new Map();
+
+    mediaDocs.forEach((doc) => {
+        const media = mapMedia(doc);
+        if (!media.isInAlbum) {
+            songs.push(media);
+            return;
+        }
+
+        const key = media.artistId || 'unknown';
+        if (!albumsByArtist.has(key)) {
+            albumsByArtist.set(key, {
+                artistId: media.artistId,
+                artistUsername: media.artistUsername,
+                songs: [],
+            });
+        }
+        albumsByArtist.get(key).songs.push(media);
+    });
+
+    const albums = Array.from(albumsByArtist.values());
+
     return {
         ok: true,
-        media: mediaDocs.map((doc) => ({
-            id: doc._id.toString(),
-            title: doc.title,
-            description: doc.description,
-            name: doc.name,
-            audioFileName: doc.name,
-            url: doc.url,
-            audioUrl: doc.url,
-            thumbnail: doc.thumbnail,
-            coverImageUrl: doc.thumbnail,
-            createdAt: doc.createdAt,
-            updatedAt: doc.updatedAt,
-        })),
+        media: mediaDocs.map(mapMedia),
+        songs,
+        albums,
+    };
+}
+
+async function listAlbums() {
+    const mediaDocs = await Media.find({ isInAlbum: true }).populate('artistId', 'username').sort({ createdAt: -1 });
+    const albumsByArtist = new Map();
+
+    mediaDocs.forEach((doc) => {
+        const media = mapMedia(doc);
+        const key = media.artistId || 'unknown';
+        if (!albumsByArtist.has(key)) {
+            albumsByArtist.set(key, {
+                artistId: media.artistId,
+                artistUsername: media.artistUsername,
+                songs: [],
+            });
+        }
+        albumsByArtist.get(key).songs.push(media);
+    });
+
+    return {
+        ok: true,
+        albums: Array.from(albumsByArtist.values()),
+    };
+}
+
+async function listSongs() {
+    const mediaDocs = await Media.find({ isInAlbum: false }).populate('artistId', 'username').sort({ createdAt: -1 });
+    return {
+        ok: true,
+        songs: mediaDocs.map(mapMedia),
     };
 }
 
@@ -218,4 +260,6 @@ module.exports = {
     uploadMedia,
     updateMedia,
     listMedia,
+    listAlbums,
+    listSongs,
 };

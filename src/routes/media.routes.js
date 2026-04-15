@@ -2,7 +2,7 @@ const { Router } = require('express');
 const multer = require('multer');
 const { upload: uploadHandler } = require('../controllers/mediaController/upload.controller');
 const { update: updateHandler } = require('../controllers/mediaController/update.controller');
-const { list } = require('../controllers/mediaController/list.controller');
+const { list, listAlbums, listSongs } = require('../controllers/mediaController/list.controller');
 const { requireAuth, requireArtist } = require('../middlewares/auth.middleware');
 
 const router = Router();
@@ -51,6 +51,8 @@ function handleMediaUpload(req, res, next) {
 
 router.post('/', requireAuth, requireArtist, handleMediaUpload, uploadHandler);
 router.put('/:mediaId', requireAuth, requireArtist, handleMediaUpload, updateHandler);
+router.get('/albums', requireAuth, listAlbums);
+router.get('/songs', requireAuth, listSongs);
 router.get('/', requireAuth, list);
 
 module.exports = router;
