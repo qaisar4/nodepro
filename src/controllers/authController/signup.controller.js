@@ -4,29 +4,21 @@ const { validateSignupBody } = require('../../validators/auth.validator');
 function sendError(res, status, code, message) {
     return res.status(status).json({
         success: false,
+        message,
         error: { code, message },
     });
 }
 async function signup(req, res) {
-
-    console.log(req.body);
     try {
         const v = validateSignupBody(req.body);
         if (!v.valid) {
-            console.log("in invalid",v);
             return sendError(res, v.status, v.code, v.message);
         }
 
         const result = await authService.registerUser(v.data);
         if (!result.ok) {
-
-            console.log("in error",result);
             return sendError(res, result.status, result.code, result.message);
         }
-
-
-        console.log(result);
-
         return res.status(201).json({
             success: true,
             data: { user: result.user, accessToken: result.accessToken, message: "User registered successfully"},
